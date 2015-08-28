@@ -1,8 +1,6 @@
-import unittest
-from auchapp import app
+from utils import AuchAppTest
 
-class TestUsers(unittest.TestCase):
+class TestUsers(AuchAppTest):
     def test_get_token_wihout_login(self):
-        self.test_app = app.test_client()
         response = self.test_app.get('/api/token')
         self.assertEquals(response.status, "401 UNAUTHORIZED")
