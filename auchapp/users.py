@@ -1,4 +1,4 @@
-from . import app
+from auchapp import app
 from flask_httpauth import HTTPBasicAuth
 from flask import jsonify
 
