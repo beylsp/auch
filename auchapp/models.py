@@ -33,3 +33,6 @@ class User(db.Model):
             return None
         user = User.query.get(data['id'])
         return user
+    
+    def __repr__(self):
+        return '<id %r, user %r, hash_pwd %r>' % (self.id, self.username, self.password_hash)
