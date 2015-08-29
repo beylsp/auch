@@ -1,4 +1,8 @@
 from flask import Flask
-app = Flask(__name__)
+from flask_sqlalchemy import SQLAlchemy
 
-import auchapp.users
+app = Flask(__name__)
+app.config.from_object('auchapp.settings')
+db = SQLAlchemy(app)
+
+from auchapp import api
