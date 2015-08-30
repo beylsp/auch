@@ -50,6 +50,13 @@ def new_user():
     return make_response(jsonify({'id': user.id}), 201)
 
 
+@app.route('/api/users/delete', methods=['DELETE'])
+@auth.login_required
+def del_user():
+    db.session.delete(g.user)
+    db.session.commit()
+    return make_response(jsonify({'id': g.user.id}), 200)
+
 @app.errorhandler(400)
 def bad_request(error):
     return make_response(jsonify({'error': 'Bad request'}), 400)
