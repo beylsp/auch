@@ -122,3 +122,7 @@ class TestNewUser(AuchAppTest):
     def test_new_user_with_no_user_and_password(self):
         response = self.jpost('/api/users', data = {'password': 'doe'})
         self.assertBadRequest(response)
+
+    def test_new_user_with_existing_user(self):
+        response = self.jpost('/api/users', data = {'username': 'john', 'password': 'doe'})
+        self.assertBadRequest(response)

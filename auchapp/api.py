@@ -33,11 +33,14 @@ def get_auth_token():
 @app.route('/api/users', methods=['POST'])
 def new_user():
     if not request.json:
-        abort(400)
+        abort(400) # no json body
     username = request.json.get('username')
     password = request.json.get('password')
     if not username or not password:
-        abort(400)
+        abort(400) # missing argument
+    if User.query.filter_by(username = username).first() is not None:
+        abort(400) # user already exists
+
 
 @app.errorhandler(400)
 def bad_request(error):
