@@ -1,6 +1,7 @@
 import unittest
 import tempfile
 import os
+import json
 
 from auchapp import app
 from auchapp.models import db
@@ -31,6 +32,16 @@ class AuchAppTest(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app.config['DATABASE'])
 
+    def jpost(self, endpoint, data=None, **kwargs):
+        if data:
+            data = json.dumps(data)
+
+        headers = kwargs.get('headers', {})
+        headers['Content-Type'] = 'application/json'
+        kwargs['headers'] = headers
+
+        return self.test_app.open(endpoint, method='post', data=data, **kwargs)
+
     def assertStatusCode(self, response, status_code):
         """Assert the status code of a Flask test client response."""
         self.assertEquals(response.status_code, status_code)
@@ -39,6 +50,10 @@ class AuchAppTest(unittest.TestCase):
     def assertOk(self, response):
         """Test that response status code is 200."""
         return self.assertStatusCode(response, 200)
+
+    def assertBadRequest(self, response):
+        """Test that response status code is 400."""
+        return self.assertStatusCode(response, 400)
 
     def assertNotAuthorized(self, response):
         """Test that response status code is 401."""
@@ -51,4 +66,3 @@ class AuchAppTest(unittest.TestCase):
     def assertNotAllowed(self, response):
         """Test that response status code is 405."""
         return self.assertStatusCode(response, 405)
-    

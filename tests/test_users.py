@@ -5,7 +5,7 @@ import base64
 import time
 import json
 
-class TestUsers(AuchAppTest):
+class TestToken(AuchAppTest):
     
     def get_token(self, auth=None, **kwargs):
         headers = kwargs.get('headers', {})
@@ -96,3 +96,29 @@ class TestUsers(AuchAppTest):
         response = self.get_token_wait(wait = 1, headers = headers)
 
         self.assertNotAuthorized(response)
+
+class TestNewUser(AuchAppTest):
+ 
+    def test_new_user_with_no_json_header(self):
+        response = self.test_app.post('/api/users')
+        self.assertBadRequest(response)
+
+    def test_new_user_with_no_json_body(self):
+        response = self.jpost('/api/users')
+        self.assertBadRequest(response)
+
+    def test_new_user_with_empty_json_body(self):
+        response = self.jpost('/api/users', data={})
+        self.assertBadRequest(response)
+
+    def test_new_user_with_no_user_and_no_password(self):
+        response = self.jpost('/api/users', data={'username': '', 'password': ''})
+        self.assertBadRequest(response)
+
+    def test_new_user_with_user_and_no_password(self):
+        response = self.jpost('/api/users', data = {'username': 'john'})
+        self.assertBadRequest(response)
+
+    def test_new_user_with_no_user_and_password(self):
+        response = self.jpost('/api/users', data = {'password': 'doe'})
+        self.assertBadRequest(response)

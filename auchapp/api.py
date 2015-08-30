@@ -4,6 +4,8 @@ from flask import jsonify
 from flask import g
 from flask_httpauth import HTTPBasicAuth
 from flask import make_response
+from flask import request
+from flask import abort
 
 #extensions
 auth = HTTPBasicAuth()
@@ -27,13 +29,25 @@ def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
 
+
 @app.route('/api/users', methods=['POST'])
 def new_user():
-    return jsonify({})
+    if not request.json:
+        abort(400)
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if not username or not password:
+        abort(400)
+
+@app.errorhandler(400)
+def bad_request(error):
+    return make_response(jsonify({'error': 'Bad request'}), 400)
+
 
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
+
 
 @app.errorhandler(405)
 def not_allowed(error):
