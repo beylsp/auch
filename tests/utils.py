@@ -6,7 +6,6 @@ import json
 from auchapp import app
 from auchapp.models import db
 from auchapp.models import User
-from passlib.apps import custom_app_context as pwd_context
 
 class AuchAppTest(unittest.TestCase):
     def setUp(self):
@@ -33,6 +32,12 @@ class AuchAppTest(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app.config['DATABASE'])
 
+    def addUser(self, username, password):
+        user = User(username=username)
+        user.hash_password(password=password)
+        db.session.add(user)
+        db.session.commit()
+
     def jpost(self, endpoint, data=None, **kwargs):
         if data:
             data = json.dumps(data)
@@ -42,6 +47,16 @@ class AuchAppTest(unittest.TestCase):
         kwargs['headers'] = headers
 
         return self.test_app.open(endpoint, method='post', data=data, **kwargs)
+
+    def jput(self, endpoint, data=None, **kwargs):
+        if data:
+            data = json.dumps(data)
+
+        headers = kwargs.get('headers', {})
+        headers['Content-Type'] = 'application/json'
+        kwargs['headers'] = headers
+
+        return self.test_app.open(endpoint, method='put', data=data, **kwargs)
 
     def get_user_from_db(self, id):
         return User.query.get(id)
