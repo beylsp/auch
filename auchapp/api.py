@@ -27,7 +27,14 @@ def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
 
+@app.route('/api/users', methods=['POST'])
+def new_user():
+    return jsonify({})
 
 @app.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)    
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+@app.errorhandler(405)
+def not_allowed(error):
+    return make_response(jsonify({'error': 'Not allowed'}), 405)
