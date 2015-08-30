@@ -6,6 +6,7 @@ import json
 from auchapp import app
 from auchapp.models import db
 from auchapp.models import User
+from passlib.apps import custom_app_context as pwd_context
 
 class AuchAppTest(unittest.TestCase):
     def setUp(self):
@@ -42,6 +43,9 @@ class AuchAppTest(unittest.TestCase):
 
         return self.test_app.open(endpoint, method='post', data=data, **kwargs)
 
+    def get_user_from_db(self, id):
+        return User.query.get(id)
+
     def assertStatusCode(self, response, status_code):
         """Assert the status code of a Flask test client response."""
         self.assertEquals(response.status_code, status_code)
@@ -50,6 +54,10 @@ class AuchAppTest(unittest.TestCase):
     def assertOk(self, response):
         """Test that response status code is 200."""
         return self.assertStatusCode(response, 200)
+
+    def assertCreated(self, response):
+        """Test that response status code is 201."""
+        return self.assertStatusCode(response, 201)
 
     def assertBadRequest(self, response):
         """Test that response status code is 400."""

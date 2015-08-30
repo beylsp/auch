@@ -126,3 +126,10 @@ class TestNewUser(AuchAppTest):
     def test_new_user_with_existing_user(self):
         response = self.jpost('/api/users', data = {'username': 'john', 'password': 'doe'})
         self.assertBadRequest(response)
+
+    def test_new_user_with_user_password(self):
+        response = self.jpost('/api/users', data = {'username': 'jane', 'password': 'roe'})
+        self.assertCreated(response)
+
+        user = self.get_user_from_db(id=2)
+        self.assertEquals(user.username, 'jane')

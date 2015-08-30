@@ -1,4 +1,5 @@
 from auchapp import app
+from auchapp import db
 from auchapp.models import User
 from flask import jsonify
 from flask import g
@@ -6,6 +7,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask import make_response
 from flask import request
 from flask import abort
+from flask import url_for
 
 #extensions
 auth = HTTPBasicAuth()
@@ -40,6 +42,12 @@ def new_user():
         abort(400) # missing argument
     if User.query.filter_by(username = username).first() is not None:
         abort(400) # user already exists
+
+    user = User(username = username)
+    user.hash_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return make_response(jsonify({'id': user.id}), 201)
 
 
 @app.errorhandler(400)
