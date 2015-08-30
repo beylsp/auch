@@ -43,3 +43,8 @@ class AuchAppTest(unittest.TestCase):
     def assertNotAuthorized(self, response):
         """Test that response status code is 401."""
         return self.assertStatusCode(response, 401)
+    
+    def assertNotFound(self, response):
+        """Test that response status code is 404."""
+        return self.assertStatusCode(response, 404)
+    

@@ -3,6 +3,7 @@ from auchapp.models import User
 from flask import jsonify
 from flask import g
 from flask_httpauth import HTTPBasicAuth
+from flask import make_response
 
 #extensions
 auth = HTTPBasicAuth()
@@ -25,3 +26,8 @@ def verify_password(username_or_token, password):
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)    
