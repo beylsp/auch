@@ -23,4 +23,5 @@ def verify_password(username_or_token, password):
 @app.route('/api/token')
 @auth.login_required
 def get_auth_token():
-    return jsonify({'data': 'hello'})
+    token = g.user.generate_auth_token()
+    return jsonify({ 'token': token.decode('ascii') })

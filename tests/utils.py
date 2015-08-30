@@ -11,7 +11,8 @@ class AuchAppTest(unittest.TestCase):
         self.db_fd, app.config['DATABASE'] = tempfile.mkstemp()
         app.config.update(
             TESTING=True,
-            SQLALCHEMY_DATABASE_URI='sqlite:////%s' % app.config['DATABASE']
+            SQLALCHEMY_DATABASE_URI='sqlite:////%s' % app.config['DATABASE'],
+            SECRET_KEY = os.urandom(24)
         )
         
         # create db and populate
