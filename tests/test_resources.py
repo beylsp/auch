@@ -42,10 +42,6 @@ class TestResources(AuchAppTest):
         response = self.test_app.patch('/api/login')
         self.assertNotAllowed(response)
 
-    def test_get_token_with_invalid_head_method(self):
-        response = self.test_app.head('/api/login')
-        self.assertOk(response)
-
     def test_get_token_with_invalid_put_method(self):
         response = self.test_app.put('/api/login')
         self.assertNotAllowed(response)
