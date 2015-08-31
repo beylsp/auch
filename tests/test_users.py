@@ -15,7 +15,7 @@ class TestToken(AuchAppTest):
 
         kwargs['headers'] = headers
 
-        return self.test_app.open('/api/token', method='get', **kwargs)
+        return self.test_app.open('/api/login', method='get', **kwargs)
 
     def get_token_wait(self, wait, auth=None, **kwargs):
         time.sleep(wait)
@@ -255,9 +255,9 @@ class TestEditUser(AuchAppTest):
 
         return self.test_app.open('/api/users/edit', method='put', **kwargs)
 
-    def del_user_wait(self, wait, auth=None, **kwargs):
+    def edit_user_wait(self, wait, auth=None, **kwargs):
         time.sleep(wait)
-        return self.del_user(auth, **kwargs)
+        return self.edit_user(auth, **kwargs)
 
     def test_edit_user_without_auth_header(self):
         response = self.edit_user()

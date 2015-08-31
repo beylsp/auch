@@ -25,7 +25,7 @@ def verify_password(username_or_token, password):
     return True
 
 
-@app.route('/api/token')
+@app.route('/api/login')
 @auth.login_required
 def get_auth_token():
     token = g.user.generate_auth_token()
