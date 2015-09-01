@@ -1,16 +1,13 @@
 from auchapp import app
 from auchapp.database import db
 from auchapp.models import User
+from auchapp.authentication import auth
 from flask import jsonify
 from flask import g
-from flask_httpauth import HTTPBasicAuth
 from flask import make_response
 from flask import request
 from flask import abort
 from flask import url_for
-
-#extensions
-auth = HTTPBasicAuth()
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -26,11 +23,17 @@ def verify_password(username_or_token, password):
 
 
 @app.route('/api/login', methods=['GET'])
-@auth.login_required
+@auth.http_auth_required
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
 
+
+@app.route('/api/test', methods=['GET'])
+@auth.auth_token_required
+def get_test_resource():
+    return make_response(jsonify({'result': 'success'}), 200)
+     
 
 @app.route('/api/users', methods=['POST'])
 def new_user():
@@ -83,18 +86,3 @@ def edit_user():
         
     db.session.commit()
     return make_response(jsonify({'id': user.id}), 200)
-
-
-@app.errorhandler(400)
-def bad_request(error):
-    return make_response(jsonify({'error': 'Bad request'}), 400)
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
-
-
-@app.errorhandler(405)
-def not_allowed(error):
-    return make_response(jsonify({'error': 'Not allowed'}), 405)

@@ -6,9 +6,9 @@ import base64
 import time
 import json
 
-class TestToken(AuchAppTest):
+class TestLogin(AuchAppTest):
     
-    def get_token(self, auth=None, **kwargs):
+    def login(self, auth=None, **kwargs):
         headers = kwargs.get('headers', {})
         if auth:
             headers['Authorization'] = 'Basic ' + base64.b64encode('%s:%s' % auth)
@@ -17,98 +17,100 @@ class TestToken(AuchAppTest):
 
         return self.test_app.open('/api/login', method='get', **kwargs)
 
-    def get_token_wait(self, wait, auth=None, **kwargs):
+    def login_wait(self, wait, auth=None, **kwargs):
         time.sleep(wait)
-        return self.get_token(auth, **kwargs)
+        return self.login(auth, **kwargs)
     
-    def test_get_token_wihout_auth_header(self):
-        response = self.get_token()
+    def test_login_wihout_auth_header(self):
+        response = self.login()
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_auth_header_but_missing_credentials(self):
+    def test_login_with_auth_header_but_missing_credentials(self):
         headers = {'Authorization' : 'Basic '}
-        response = self.get_token(headers = headers)
+        response = self.login(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_digest_auth_header(self):
+    def test_login_with_digest_auth_header(self):
         headers = {'Authorization' : 'Digest ' + base64.b64encode('john:doe')}
-        response = self.get_token(headers = headers)
+        response = self.login(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_invalid_auth_header(self):
+    def test_login_with_invalid_auth_header(self):
         headers = {'Authorization' : 'Invalid ' + base64.b64encode('john:doe')}
-        response = self.get_token(headers = headers)
+        response = self.login(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_invalid_user(self):
-        response = self.get_token(auth=('joe', 'doe'))
+    def test_login_with_incomplete_auth_header(self):
+        headers = {'Authorization' : base64.b64encode('john:doe')}
+        response = self.login(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_invalid_password(self):
-        response = self.get_token(auth=('john', 'bloggs'))
+    def test_login_with_invalid_user(self):
+        response = self.login(auth=('joe', 'doe'))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_invalid_user_and_password(self):
-        response = self.get_token(auth=('joe', 'bloggs'))
+    def test_login_with_invalid_password(self):
+        response = self.login(auth=('john', 'bloggs'))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_invalid_user_and_no_password(self):
-        response = self.get_token(auth=('joe', ''))
+    def test_login_with_invalid_user_and_password(self):
+        response = self.login(auth=('joe', 'bloggs'))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_valid_user_and_no_password(self):
-        response = self.get_token(auth=('john', ''))
+    def test_login_with_invalid_user_and_no_password(self):
+        response = self.login(auth=('joe', ''))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_no_user_and_invalid_password(self):
-        response = self.get_token(auth=('', 'bloggs'))
+    def test_login_with_valid_user_and_no_password(self):
+        response = self.login(auth=('john', ''))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_no_user_and_valid_password(self):
-        response = self.get_token(auth=('', 'doe'))
+    def test_login_with_no_user_and_invalid_password(self):
+        response = self.login(auth=('', 'bloggs'))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_no_user_and_no_password(self):
-        response = self.get_token(auth=('', ''))
+    def test_login_with_no_user_and_valid_password(self):
+        response = self.login(auth=('', 'doe'))
         self.assertNotAuthorized(response)
 
-    def test_get_token_with_login(self):
-        response = self.get_token(auth=('john', 'doe'))
+    def test_login_with_no_user_and_no_password(self):
+        response = self.login(auth=('', ''))
+        self.assertNotAuthorized(response)
+
+    def test_login_with_credentials(self):
+        response = self.login(auth=('john', 'doe'))
         self.assertOk(response)
 
-    def test_get_token_with_valid_token(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-        
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.get_token(headers = headers)        
-        self.assertOk(response)
-
-        json_response = json.loads(response.get_data())        
-        self.assertEquals(json_response['token'], token)
-
-    def test_get_token_with_expired_token(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 0.1)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.get_token_wait(wait = 1, headers = headers)
-        self.assertNotAuthorized(response)
-
-    def test_get_token_with_valid_token_but_user_removed(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        # delete user
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.test_app.open('/api/users/delete', method='delete', headers = headers)
-        self.assertOk(response)
-
-        response = self.get_token(headers = headers)        
-        self.assertNotAuthorized(response)
+#     def test_login_with_valid_token(self):
+#         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
+#         token = s.dumps({'id': 1})
+#         
+#         encoded = base64.b64encode('%s' % token)
+#         headers = {'Authorization' : 'Basic ' + encoded}
+#         response = self.get_token(headers = headers)        
+#         self.assertNotAuthorized(response)
+# 
+#     def test_get_token_with_expired_token(self):
+#         s = Serializer(app.config['SECRET_KEY'], expires_in = 0.1)
+#         token = s.dumps({'id': 1})
+# 
+#         encoded = base64.b64encode('%s:' % token)
+#         headers = {'Authorization' : 'Basic ' + encoded}
+#         response = self.get_token_wait(wait = 1, headers = headers)
+#         self.assertNotAuthorized(response)
+# 
+#     def test_get_token_with_valid_token_but_user_removed(self):
+#         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
+#         token = s.dumps({'id': 1})
+# 
+#         # delete user
+#         encoded = base64.b64encode('%s:' % token)
+#         headers = {'Authorization' : 'Basic ' + encoded}
+#         response = self.test_app.open('/api/users/delete', method='delete', headers = headers)
+#         self.assertOk(response)
+# 
+#         response = self.get_token(headers = headers)        
+#         self.assertNotAuthorized(response)
 
 
 class TestNewUser(AuchAppTest):

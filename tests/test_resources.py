@@ -53,7 +53,27 @@ class TestResources(AuchAppTest):
     def test_get_token_with_invalid_trace_method(self):
         response = self.test_app.trace('/api/login')
         self.assertNotAllowed(response)
-    
+
+    def test_get_test_resource_with_invalid_post_method(self):
+        response = self.test_app.post('/api/test')
+        self.assertNotAllowed(response)
+
+    def test_get_test_resource_with_invalid_patch_method(self):
+        response = self.test_app.patch('/api/test')
+        self.assertNotAllowed(response)
+
+    def test_get_test_resource_with_invalid_put_method(self):
+        response = self.test_app.put('/api/test')
+        self.assertNotAllowed(response)
+
+    def test_get_test_resource_with_invalid_delete_method(self):
+        response = self.test_app.delete('/api/test')
+        self.assertNotAllowed(response)
+
+    def test_get_test_resource_with_invalid_trace_method(self):
+        response = self.test_app.trace('/api/test')
+        self.assertNotAllowed(response)
+
     def test_new_user_with_invalid_get_method(self):
         response = self.test_app.get('/api/users')
         self.assertNotAllowed(response)
