@@ -1,5 +1,5 @@
 from auchapp import app
-from auchapp import db
+from auchapp.database import db
 from auchapp.models import User
 from flask import jsonify
 from flask import g
