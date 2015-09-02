@@ -119,7 +119,7 @@ class TestProtectedResource(TestLogin):
         self.assertNotAuthorized(response)
  
     def test_get_protected_resource_with_valid_token_but_user_removed(self):
-        self.del_user(id=1) 
+        self.del_user_from_db(id=1) 
         response = self.get_protected_resource(endpoint='/api/test', token=self.token)
         self.assertNotAuthorized(response)
 
