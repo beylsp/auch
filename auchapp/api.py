@@ -54,7 +54,7 @@ def new_user():
 
 
 @app.route('/api/users/delete', methods=['DELETE'])
-@auth.login_required
+@auth.auth_token_required
 def del_user():
     db.session.delete(g.user)
     db.session.commit()

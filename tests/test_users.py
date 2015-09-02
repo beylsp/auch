@@ -177,98 +177,55 @@ class TestNewUser(AuchAppTest):
         self.assertEquals(user.username, 'jane')
 
 
-class TestDelUser(AuchAppTest):
+class TestDelUser(TestLogin):
 
-    def del_user(self, auth=None, **kwargs):
+    def setUp(self):
+        AuchAppTest.setUp(self)
+
+        response = self.login(auth=('john', 'doe'))
+        json_data = json.loads(response.data)
+        self.token = json_data['token']
+
+    def del_user(self, token=None, **kwargs):
         headers = kwargs.get('headers', {})
-        if auth:
-            headers['Authorization'] = 'Basic ' + base64.b64encode('%s:%s' % auth)
+        if token:
+            headers['Authentication-Token'] = token
 
         kwargs['headers'] = headers
 
         return self.test_app.open('/api/users/delete', method='delete', **kwargs)
 
-    def del_user_wait(self, wait, auth=None, **kwargs):
+    def del_user_wait(self, wait, token=None, **kwargs):
         time.sleep(wait)
-        return self.del_user(auth, **kwargs)
+        return self.del_user(token, **kwargs)
 
-    def test_del_user_without_auth_header(self):
+    def test_del_user_without_auth_header_key(self):
         response = self.del_user()
         self.assertNotAuthorized(response)
 
-    def test_del_user_with_auth_header_but_missing_credentials(self):
-        headers = {'Authorization' : 'Basic '}
+    def test_del_user_with_auth_header_but_missing_token(self):
+        headers = {'Authentication-Token' : ''}
         response = self.del_user(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_del_user_with_digest_auth_header(self):
-        headers = {'Authorization' : 'Digest ' + base64.b64encode('john:doe')}
+    def test_del_user_with_invalid_auth_token(self):
+        token = 'ayJhbGciOiJIUzI1NiIsImV4cCI6MTQ0MTIxMzc3OCwiaWF0IjoxNDQxMjEzMTc4fQ.eyJpZCI6MX0.Gr-lwQ8uQhw4N9hyCdh2gsplZx4UFN5dHpf90Uy9OYQ' 
+        headers = {'Token-Authentication' : token}
         response = self.del_user(headers = headers)
         self.assertNotAuthorized(response)
-
-    def test_del_user_with_invalid_auth_header(self):
-        headers = {'Authorization' : 'Invalid ' + base64.b64encode('john:doe')}
-        response = self.del_user(headers = headers)
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_invalid_user(self):
-        response = self.del_user(auth=('joe', 'doe'))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_invalid_password(self):
-        response = self.del_user(auth=('john', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_invalid_user_and_password(self):
-        response = self.del_user(auth=('joe', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_invalid_user_and_no_password(self):
-        response = self.del_user(auth=('joe', ''))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_valid_user_and_no_password(self):
-        response = self.del_user(auth=('john', ''))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_no_user_and_invalid_password(self):
-        response = self.del_user(auth=('', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_no_user_and_valid_password(self):
-        response = self.del_user(auth=('', 'doe'))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_no_user_and_no_password(self):
-        response = self.del_user(auth=('', ''))
-        self.assertNotAuthorized(response)
-
-    def test_del_user_with_login(self):
-        response = self.del_user(auth=('john', 'doe'))
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertEquals(user, None)
 
     def test_del_user_with_valid_token(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-        
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.del_user(headers = headers)        
+        response = self.del_user(self.token)
         self.assertOk(response)
 
         user = self.get_user_from_db(id=1)
         self.assertEquals(user, None)
 
     def test_del_user_with_expired_token(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 0.1)
+        s = Serializer(app.config['SECRET_KEY'], expires_in=0.1)
         token = s.dumps({'id': 1})
 
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.del_user_wait(wait = 1, headers = headers)
+        response = self.del_user_wait(wait=1, token=token)
         self.assertNotAuthorized(response)
 
 
