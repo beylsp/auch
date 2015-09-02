@@ -1,5 +1,7 @@
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import BadSignature
+from itsdangerous import SignatureExpired
 from functools import wraps
 from flask_httpauth import HTTPBasicAuth
 from auchapp.models import User
@@ -12,7 +14,7 @@ class RestHTTPBasicAuth(HTTPBasicAuth):
     def _verify_password(self, password, user):
         return pwd_context.verify(password, user.password_hash)
 
-    def _verify_auth_token(token):
+    def _verify_auth_token(self, token):
         s = Serializer(app.config['SECRET_KEY'])
         try:
             data = s.loads(token)

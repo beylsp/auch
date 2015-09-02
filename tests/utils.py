@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import os
 import json
+import time
 
 from auchapp import app
 from auchapp.models import db
@@ -32,11 +33,28 @@ class AuchAppTest(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app.config['DATABASE'])
 
-    def addUser(self, username, password):
+    def add_user(self, username, password):
         user = User(username=username)
         user.hash_password(password=password)
         db.session.add(user)
         db.session.commit()
+
+    def del_user(self, id):
+        user = User.query.get(id)
+        db.session.delete(user)
+        db.session.commit()
+        
+    def get_protected_resource(self, endpoint, token, **kwargs):
+        headers = kwargs.get('headers', {})
+        if token:
+            headers['Authentication-Token'] = token
+
+        kwargs['headers'] = headers
+        return self.test_app.open(endpoint, method='get', **kwargs)
+
+    def get_protected_resource_wait(self, wait, endpoint, token, **kwargs):
+        time.sleep(wait)
+        return self.get_protected_resource(endpoint, token, **kwargs)
 
     def jpost(self, endpoint, data=None, **kwargs):
         if data:

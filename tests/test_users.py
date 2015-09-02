@@ -81,38 +81,58 @@ class TestLogin(AuchAppTest):
         response = self.login(auth=('john', 'doe'))
         self.assertOk(response)
 
-#     def test_login_with_valid_token(self):
-#         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-#         token = s.dumps({'id': 1})
-#         
-#         encoded = base64.b64encode('%s' % token)
-#         headers = {'Authorization' : 'Basic ' + encoded}
-#         response = self.get_token(headers = headers)        
-#         self.assertNotAuthorized(response)
-# 
-#     def test_get_token_with_expired_token(self):
-#         s = Serializer(app.config['SECRET_KEY'], expires_in = 0.1)
-#         token = s.dumps({'id': 1})
-# 
-#         encoded = base64.b64encode('%s:' % token)
-#         headers = {'Authorization' : 'Basic ' + encoded}
-#         response = self.get_token_wait(wait = 1, headers = headers)
-#         self.assertNotAuthorized(response)
-# 
-#     def test_get_token_with_valid_token_but_user_removed(self):
-#         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-#         token = s.dumps({'id': 1})
-# 
-#         # delete user
-#         encoded = base64.b64encode('%s:' % token)
-#         headers = {'Authorization' : 'Basic ' + encoded}
-#         response = self.test_app.open('/api/users/delete', method='delete', headers = headers)
-#         self.assertOk(response)
-# 
-#         response = self.get_token(headers = headers)        
-#         self.assertNotAuthorized(response)
+        json_data = json.loads(response.data)
+        self.assertIn('token', json_data)
 
+class TestProtectedResource(TestLogin):
+    
+    def setUp(self):
+        AuchAppTest.setUp(self)
 
+        response = self.login(auth=('john', 'doe'))
+        json_data = json.loads(response.data)
+        self.token = json_data['token']
+        
+    def test_get_protected_resource_with_valid_token(self):
+        response = self.get_protected_resource(endpoint='/api/test', token=self.token)
+        self.assertOk(response)
+
+        json_data = json.loads(response.data)
+        self.assertIn('success', json_data['result'])
+
+    def test_get_protected_resource_with_invalid_token(self):
+        token = 'ayJhbGciOiJIUzI1NiIsImV4cCI6MTQ0MTIxMzc3OCwiaWF0IjoxNDQxMjEzMTc4fQ.eyJpZCI6MX0.Gr-lwQ8uQhw4N9hyCdh2gsplZx4UFN5dHpf90Uy9OYQ' 
+        response = self.get_protected_resource(endpoint='/api/test', token=token)
+        self.assertNotAuthorized(response)
+ 
+    def test_get_protected_resource_with_expired_token(self):
+        s = Serializer(app.config['SECRET_KEY'], expires_in = 0.1)
+        token = s.dumps({'id': 1}) 
+
+        response = self.get_protected_resource_wait(wait=1, endpoint='/api/test', token=token)
+        self.assertNotAuthorized(response)
+ 
+    def test_get_protected_resource_with_valid_token_but_user_removed(self):
+        self.del_user(id=1) 
+        response = self.get_protected_resource(endpoint='/api/test', token=self.token)
+        self.assertNotAuthorized(response)
+
+    def test_get_protected_resource_wihout_auth_header_key(self):
+        kwargs = { 'headers' : {} }
+        response = self.test_app.open('/api/test', method='get', **kwargs)
+        self.assertNotAuthorized(response)
+
+    def test_get_protected_resource_with_auth_header_but_missing_token(self):
+        kwargs = { 'headers' : {'Authentication-Token' : ''} }
+        response = self.test_app.open('/api/test', method='get', **kwargs)
+        self.assertNotAuthorized(response)
+
+    def test_get_protected_resource_with_invalid_auth_header(self):
+        kwargs = { 'headers' : {'Token-Authentication' : self.token} }
+        response = self.test_app.open('/api/test', method='get', **kwargs)
+        self.assertNotAuthorized(response)
+
+ 
 class TestNewUser(AuchAppTest):
  
     def test_new_user_with_no_json_header(self):
@@ -458,14 +478,14 @@ class TestEditUser(AuchAppTest):
         self.assertTrue(pwd_context.verify('roe', user.password_hash))
 
     def test_edit_user_with_login_and_edit_with_invalid_username(self):
-        self.addUser('jane', 'roe')
+        self.add_user('jane', 'roe')
 
         headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
         response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
         self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_edit_with_invalid_username(self):
-        self.addUser('jane', 'roe')
+        self.add_user('jane', 'roe')
 
         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
         token = s.dumps({'id': 1})
