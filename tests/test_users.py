@@ -84,6 +84,12 @@ class TestLogin(AuchAppTest):
         json_data = json.loads(response.data)
         self.assertIn('token', json_data)
 
+    def test_login_with_user_removed(self):
+        self.del_user(id=1)
+        response = self.login(auth=('john', 'doe'))
+        self.assertNotAuthorized(response)
+
+
 class TestProtectedResource(TestLogin):
     
     def setUp(self):
