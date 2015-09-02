@@ -85,7 +85,7 @@ class TestLogin(AuchAppTest):
         self.assertIn('token', json_data)
 
     def test_login_with_user_removed(self):
-        self.del_user(id=1)
+        self.del_user_from_db(id=1)
         response = self.login(auth=('john', 'doe'))
         self.assertNotAuthorized(response)
 
@@ -441,14 +441,14 @@ class TestEditUser(AuchAppTest):
         self.assertTrue(pwd_context.verify('roe', user.password_hash))
 
     def test_edit_user_with_login_and_edit_with_invalid_username(self):
-        self.add_user('jane', 'roe')
+        self.add_user_to_db('jane', 'roe')
 
         headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
         response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
         self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_edit_with_invalid_username(self):
-        self.add_user('jane', 'roe')
+        self.add_user_to_db('jane', 'roe')
 
         s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
         token = s.dumps({'id': 1})

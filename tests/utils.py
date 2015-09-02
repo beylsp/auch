@@ -33,16 +33,19 @@ class AuchAppTest(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app.config['DATABASE'])
 
-    def add_user(self, username, password):
+    def add_user_to_db(self, username, password):
         user = User(username=username)
         user.hash_password(password=password)
         db.session.add(user)
         db.session.commit()
 
-    def del_user(self, id):
+    def del_user_from_db(self, id):
         user = User.query.get(id)
         db.session.delete(user)
         db.session.commit()
+
+    def get_user_from_db(self, id):
+        return User.query.get(id)
         
     def get_protected_resource(self, endpoint, token, **kwargs):
         headers = kwargs.get('headers', {})
@@ -75,9 +78,6 @@ class AuchAppTest(unittest.TestCase):
         kwargs['headers'] = headers
 
         return self.test_app.open(endpoint, method='put', data=data, **kwargs)
-
-    def get_user_from_db(self, id):
-        return User.query.get(id)
 
     def assertStatusCode(self, response, status_code):
         """Assert the status code of a Flask test client response."""
