@@ -7,7 +7,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask import g
 from flask import request
 from auchapp import app
-from auchapp.models import User
+from auchapp.models.users import User
 
 
 class RestHTTPBasicAuth(HTTPBasicAuth):

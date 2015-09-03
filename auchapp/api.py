@@ -6,9 +6,10 @@ from flask import abort
 from flask import url_for
 from auchapp import app
 from auchapp.database import db
-from auchapp.models import user_schema
 from auchapp.authentication import auth
-from auchapp.models import User
+from auchapp.models.users import User
+from auchapp.models.users import user_schema
+
 
 @app.route('/api/login', methods=['GET'])
 @auth.http_auth_required
