@@ -1,7 +1,8 @@
-from auchapp import app
 from utils import AuchAppTest
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from passlib.apps import custom_app_context as pwd_context
+from auchapp import app
+
 import base64
 import time
 import json
@@ -229,231 +230,101 @@ class TestDelUser(TestLogin):
         self.assertNotAuthorized(response)
 
 
-class TestEditUser(AuchAppTest):
+class TestEditUser(TestLogin):
+
+    def setUp(self):
+        AuchAppTest.setUp(self)
+
+        response = self.login(auth=('john', 'doe'))
+        json_data = json.loads(response.data)
+        self.token = json_data['token']
     
-    def edit_user(self, auth=None, **kwargs):
+    def edit_user(self, token=None, **kwargs):
         headers = kwargs.get('headers', {})
-        if auth:
-            headers['Authorization'] = 'Basic ' + base64.b64encode('%s:%s' % auth)
+        if token:
+            headers['Authentication-Token'] = token
 
         kwargs['headers'] = headers
 
         return self.test_app.open('/api/users/edit', method='put', **kwargs)
 
-    def edit_user_wait(self, wait, auth=None, **kwargs):
+    def edit_user_wait(self, wait, token=None, **kwargs):
         time.sleep(wait)
-        return self.edit_user(auth, **kwargs)
+        return self.edit_user(token, **kwargs)
 
-    def test_edit_user_without_auth_header(self):
+    def test_edit_user_without_auth_header_key(self):
         response = self.edit_user()
         self.assertNotAuthorized(response)
 
-    def test_edit_user_with_auth_header_but_missing_credentials(self):
-        headers = {'Authorization' : 'Basic '}
+    def test_edit_user_with_auth_header_but_missing_token(self):
+        headers = {'Authentication-Token' : ''}
         response = self.edit_user(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_edit_user_with_digest_auth_header(self):
-        headers = {'Authorization' : 'Digest ' + base64.b64encode('john:doe')}
+    def test_edit_user_with_invalid_auth_token(self):
+        token = 'ayJhbGciOiJIUzI1NiIsImV4cCI6MTQ0MTIxMzc3OCwiaWF0IjoxNDQxMjEzMTc4fQ.eyJpZCI6MX0.Gr-lwQ8uQhw4N9hyCdh2gsplZx4UFN5dHpf90Uy9OYQ' 
+        headers = {'Token-Authentication' : token}
         response = self.edit_user(headers = headers)
         self.assertNotAuthorized(response)
 
-    def test_edit_user_with_invalid_auth_header(self):
-        headers = {'Authorization' : 'Invalid ' + base64.b64encode('john:doe')}
-        response = self.edit_user(headers = headers)
-        self.assertNotAuthorized(response)
+    def test_edit_user_with_expired_token(self):
+        s = Serializer(app.config['SECRET_KEY'], expires_in=0.1)
+        token = s.dumps({'id': 1})
 
-    def test_edit_user_with_invalid_user(self):
-        response = self.edit_user(auth=('joe', 'doe'))
+        response = self.edit_user_wait(wait=1, token=token)
         self.assertNotAuthorized(response)
-
-    def test_edit_user_with_invalid_password(self):
-        response = self.edit_user(auth=('john', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_invalid_user_and_password(self):
-        response = self.edit_user(auth=('joe', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_invalid_user_and_no_password(self):
-        response = self.edit_user(auth=('joe', ''))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_valid_user_and_no_password(self):
-        response = self.edit_user(auth=('john', ''))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_no_user_and_invalid_password(self):
-        response = self.edit_user(auth=('', 'bloggs'))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_no_user_and_valid_password(self):
-        response = self.edit_user(auth=('', 'doe'))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_no_user_and_no_password(self):
-        response = self.edit_user(auth=('', ''))
-        self.assertNotAuthorized(response)
-
-    def test_edit_user_with_login_and_no_json_header(self):
-        response = self.edit_user(auth=('john', 'doe'))
-        self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_no_json_header(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-        
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.edit_user(headers = headers)        
-        self.assertBadRequest(response)
-
-    def test_edit_user_with_login_and_no_json_body(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', headers=headers)
+        response = self.edit_user(self.token)
         self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_no_json_body(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-        
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', headers = headers)        
-        self.assertBadRequest(response)
-
-    def test_edit_user_with_login_and_empty_json_body(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', data={}, headers=headers)
+        headers = {'Authentication-Token' : self.token}
+        response = self.jput('/api/users/edit', headers=headers)        
         self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_empty_json_body(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-        
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={}, headers = headers)        
+        headers = {'Authentication-Token' : self.token}
+        response = self.jput('/api/users/edit', data={}, headers=headers)        
         self.assertBadRequest(response)
 
-    def test_edit_user_with_login_and_edit_with_empty_username(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
+    def test_edit_user_with_token_and_edit_with_empty_username_and_no_password(self):
+        headers = {'Authentication-Token' : self.token}
         response = self.jput('/api/users/edit', data={'username': ''}, headers=headers)
         self.assertBadRequest(response)
 
-    def test_edit_user_with_token_and_edit_with_empty_username(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'username': ''}, headers=headers)
-        self.assertBadRequest(response)
-
-    def test_edit_user_with_login_and_edit_with_empty_password(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
+    def test_edit_user_with_token_and_edit_with_empty_password_and_no_username(self):
+        headers = {'Authentication-Token' : self.token}
         response = self.jput('/api/users/edit', data={'password': ''}, headers=headers)
-        self.assertBadRequest(response)
-
-    def test_edit_user_with_token_and_edit_with_empty_password(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'password': ''}, headers=headers)
-        self.assertBadRequest(response)
-
-    def test_edit_user_with_login_and_edit_with_empty_username_and_password(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', data={'username': '', 'password': ''}, headers=headers)
         self.assertBadRequest(response)
 
     def test_edit_user_with_token_and_edit_with_empty_username_and_password(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
+        headers = {'Authentication-Token' : self.token}
         response = self.jput('/api/users/edit', data={'username': '', 'password': ''}, headers=headers)
         self.assertBadRequest(response)
 
-    def test_edit_user_with_login_and_edit_with_valid_username(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertEquals(user.username, 'jane')
-
-    def test_edit_user_with_token_and_edit_with_valid_username(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertEquals(user.username, 'jane')
-
-    def test_edit_user_with_login_and_edit_with_valid_password(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', data={'password': 'roe'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertTrue(pwd_context.verify('roe', user.password_hash))
-    
-    def test_edit_user_with_token_and_edit_with_valid_password(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'password': 'roe'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertTrue(pwd_context.verify('roe', user.password_hash))
-
-    def test_edit_user_with_login_and_edit_with_valid_username_and_password(self):
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
-        response = self.jput('/api/users/edit', data={'username': 'jane', 'password': 'roe'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertEquals(user.username, 'jane')
-        self.assertTrue(pwd_context.verify('roe', user.password_hash))
-
-    def test_edit_user_with_token_and_edit_with_valid_username_and_password(self):
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'username': 'jane', 'password': 'roe'}, headers=headers)
-        self.assertOk(response)
-
-        user = self.get_user_from_db(id=1)
-        self.assertEquals(user.username, 'jane')
-        self.assertTrue(pwd_context.verify('roe', user.password_hash))
-
-    def test_edit_user_with_login_and_edit_with_invalid_username(self):
-        self.add_user_to_db('jane', 'roe')
-
-        headers = {'Authorization' : 'Basic ' + base64.b64encode('john:doe')}
+    def test_edit_user_with_token_and_edit_with_valid_username_and_no_password(self):
+        headers = {'Authentication-Token' : self.token}
         response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
         self.assertBadRequest(response)
+
+    def test_edit_user_with_token_and_edit_with_valid_password_and_no_username(self):
+        headers = {'Authentication-Token' : self.token}
+        response = self.jput('/api/users/edit', data={'password': 'roe'}, headers=headers)
+        self.assertBadRequest(response)
+
+    def test_edit_user_with_token_and_edit_with_valid_username_and_password(self):
+        headers = {'Authentication-Token' : self.token}
+        response = self.jput('/api/users/edit', data={'username': 'jane', 'password': 'roe'}, headers=headers)
+        self.assertOk(response)
+
+        user = self.get_user_from_db(id=1)
+        self.assertEquals(user.username, 'jane')
+        self.assertTrue(pwd_context.verify('roe', user.password))
 
     def test_edit_user_with_token_and_edit_with_invalid_username(self):
         self.add_user_to_db('jane', 'roe')
 
-        s = Serializer(app.config['SECRET_KEY'], expires_in = 600)
-        token = s.dumps({'id': 1})
-
-        encoded = base64.b64encode('%s:' % token)
-        headers = {'Authorization' : 'Basic ' + encoded}
-        response = self.jput('/api/users/edit', data={'username': 'jane'}, headers=headers)
+        headers = {'Authentication-Token' : self.token}
+        response = self.jput('/api/users/edit', data={'username': 'jane', 'password': 'roe'}, headers=headers)
         self.assertBadRequest(response)

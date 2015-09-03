@@ -4,15 +4,16 @@ from itsdangerous import BadSignature
 from itsdangerous import SignatureExpired
 from functools import wraps
 from flask_httpauth import HTTPBasicAuth
-from auchapp.models import User
 from flask import g
 from flask import request
 from auchapp import app
+from auchapp.models import User
+
 
 class RestHTTPBasicAuth(HTTPBasicAuth):
 
     def _verify_password(self, password, user):
-        return pwd_context.verify(password, user.password_hash)
+        return pwd_context.verify(password, user.password)
 
     def _verify_auth_token(self, token):
         s = Serializer(app.config['SECRET_KEY'])

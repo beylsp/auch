@@ -1,12 +1,14 @@
+from passlib.apps import custom_app_context as pwd_context
+from auchapp import app
+from auchapp.models import db
+from auchapp.models import User
+
 import unittest
 import tempfile
 import os
 import json
 import time
 
-from auchapp import app
-from auchapp.models import db
-from auchapp.models import User
 
 class AuchAppTest(unittest.TestCase):
     def setUp(self):
@@ -20,7 +22,7 @@ class AuchAppTest(unittest.TestCase):
         # create db and populate
         db.create_all()
         user = User(username='john')
-        user.hash_password(password='doe')
+        user.password = pwd_context.encrypt('doe')
         db.session.add(user)
         db.session.commit()
 
@@ -35,7 +37,7 @@ class AuchAppTest(unittest.TestCase):
 
     def add_user_to_db(self, username, password):
         user = User(username=username)
-        user.hash_password(password=password)
+        user.password = pwd_context.encrypt(password)
         db.session.add(user)
         db.session.commit()
 
