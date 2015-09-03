@@ -1,7 +1,7 @@
 from passlib.apps import custom_app_context as pwd_context
 from auchapp import app
-from auchapp.models import db
-from auchapp.models import User
+from auchapp.models.users import db
+from auchapp.models.users import User
 
 import unittest
 import tempfile
