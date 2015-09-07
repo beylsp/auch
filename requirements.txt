@@ -2,6 +2,7 @@ Flask==0.10.1
 Flask-RESTful==0.3.4
 Flask-HTTPAuth==2.6.0
 Flask-SQLAlchemy==2.0.0
+Flask-Redis==0.1.0
 passlib==1.6.5
 python-dateutil==2.4.2
 marshmallow==2.0.0b5
