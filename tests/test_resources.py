@@ -145,3 +145,23 @@ class TestResources(AuchAppTest):
     def test_edit_user_with_invalid_trace_method(self):
         response = self.test_app.trace('/api/users/edit')
         self.assertNotAllowed(response)
+
+    def test_sync_data_with_invalid_post_method(self):
+        response = self.test_app.post('/api/sync')
+        self.assertNotAllowed(response)
+
+    def test_sync_data_with_invalid_patch_method(self):
+        response = self.test_app.patch('/api/sync')
+        self.assertNotAllowed(response)
+
+    def test_sync_data_with_invalid_put_method(self):
+        response = self.test_app.put('/api/sync')
+        self.assertNotAllowed(response)
+
+    def test_sync_data_with_invalid_delete_method(self):
+        response = self.test_app.delete('/api/sync')
+        self.assertNotAllowed(response)
+
+    def test_sync_data_with_invalid_trace_method(self):
+        response = self.test_app.trace('/api/sync')
+        self.assertNotAllowed(response)

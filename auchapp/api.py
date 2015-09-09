@@ -61,3 +61,9 @@ def del_user():
     db.session.delete(g.user)
     db.session.commit()
     return make_response(jsonify({'id': g.user.id}), 200)
+
+
+@app.route('/api/sync', methods=['GET'])
+@auth.auth_token_required
+def sync_data():
+    return make_response(jsonify({'result': 'success'}), 200)
