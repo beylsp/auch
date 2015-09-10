@@ -2,6 +2,7 @@ from utils import AuchAppTest
 
 import base64
 import json
+import random
 
 class TestSync(AuchAppTest):
 
@@ -54,3 +55,15 @@ class TestSync(AuchAppTest):
         date = 'Sun Nov 6 08:49:37 1994'
         response = self.get_protected_resource(modified=date)
         self.assertOk(response)
+
+    def test_sync_data_with_modifiedsince_header_ANSI_C_but_no_token(self):
+        self.token = ''
+        date = 'Sun Nov 6 08:49:37 1994'
+        response = self.get_protected_resource(modified=date)
+        self.assertNotAuthorized(response)
+
+    def test_sync_data_with_modifiedsince_header_RFC_1036_but_invalid_token(self):
+        self.token = ''.join(random.sample(self.token, len(self.token)))
+        date = 'Sunday, 06-Nov-94 08:49:37 GMT'
+        response = self.get_protected_resource(modified=date)
+        self.assertNotAuthorized(response)
