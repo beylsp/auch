@@ -22,7 +22,7 @@ def modified_since_required(f):
     def decorated(*args, **kwargs):
         date = _check_http_date()
         if date:
-            return f(date, *args, **kwargs)
+            return f(*args, **kwargs)
         else:
             return _http_date_error_callback()
     return decorated

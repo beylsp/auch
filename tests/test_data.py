@@ -28,5 +28,29 @@ class TestSync(AuchAppTest):
         return self.test_app.open('/api/sync', method='get', **kwargs)
 
     def test_sync_data_with_modifiedsince_header_missing(self):
-        response = self.get_protected_resource(endpoint='/api/sync')
+        response = self.get_protected_resource()
         self.assertBadRequest(response)
+
+    def test_sync_data_with_empty_modifiedsince_header(self):
+        response = self.get_protected_resource(modified=' ')
+        self.assertBadRequest(response)
+
+    def test_sync_data_with_invalid_modifiedsince_header(self):
+        date = '06-11-94'
+        response = self.get_protected_resource(modified=date)
+        self.assertBadRequest(response)
+
+    def test_sync_data_with_modifiedsince_header_RFC_1123(self):
+        date = 'Sun, 06 Nov 1994 08:49:37 GMT'
+        response = self.get_protected_resource(modified=date)
+        self.assertOk(response)
+
+    def test_sync_data_with_modifiedsince_header_RFC_1036(self):
+        date = 'Sunday, 06-Nov-94 08:49:37 GMT'
+        response = self.get_protected_resource(modified=date)
+        self.assertOk(response)
+
+    def test_sync_data_with_modifiedsince_header_ANSI_C(self):
+        date = 'Sun Nov 6 08:49:37 1994'
+        response = self.get_protected_resource(modified=date)
+        self.assertOk(response)
