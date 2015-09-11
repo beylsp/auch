@@ -94,6 +94,10 @@ class AuchAppTest(unittest.TestCase):
         """Test that response status code is 201."""
         return self.assertStatusCode(response, 201)
 
+    def assertNotModified(self, response):
+        """Test that response status code is 304."""
+        return self.assertStatusCode(response, 304)
+
     def assertBadRequest(self, response):
         """Test that response status code is 400."""
         return self.assertStatusCode(response, 400)
