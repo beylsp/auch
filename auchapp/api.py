@@ -7,7 +7,7 @@ from flask import url_for
 from auchapp import app
 from auchapp import dateutil
 from auchapp.database import db
-from auchapp.store import redis_store
+from auchapp.store import store
 from auchapp.authentication import auth
 from auchapp.models.users import User
 from auchapp.models.users import user_schema
@@ -68,5 +68,11 @@ def del_user():
 @app.route('/api/sync', methods=['GET'])
 @dateutil.modified_since_required
 @auth.auth_token_required
-def sync_data():
-    return make_response(jsonify({'result': 'success'}), 200)
+def sync_data(modified_since):
+    last_update = store.last_update
+    if modified_since == last_update:
+        return make_response(jsonify({'result': 'not modified'}), 304)
+    elif modified_since < last_update:
+        return make_response(jsonify({'result': 'success'}), 200)
+    else:
+        abort(400)

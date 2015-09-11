@@ -6,3 +6,4 @@ Flask-Redis==0.1.0
 passlib==1.6.5
 python-dateutil==2.4.2
 marshmallow==2.0.0b5
+mockredispy==2.9.0.11

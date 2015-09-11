@@ -5,3 +5,7 @@ script: nosetests -v
 
 notifications:
   slack: beylsp:ksj5Wk4lvPhMvo7Iy1UYdALL
+  
+env:
+# configuration: Production, Development or Testing
+- CONFIG=Testing
