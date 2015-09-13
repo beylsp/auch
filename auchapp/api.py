@@ -71,8 +71,11 @@ def del_user():
 def sync_data(modified_since):
     last_update = store.last_update
     if modified_since == last_update:
-        return make_response(jsonify({'result': 'not modified'}), 304)
+        abort(304)
     elif modified_since < last_update:
-        return make_response(jsonify({'result': 'success'}), 200)
+        return make_response(jsonify(
+            {'format': 'auch-json-v1',
+             'product_files': store.product_files(g.user) }),
+            200)
     else:
         abort(400)

@@ -1,5 +1,11 @@
 from auchapp import app
 
+
+@app.errorhandler(304)
+def not_modified(error):
+    return make_response(jsonify({'result': 'Not modified'}), 304)
+
+
 @app.errorhandler(400)
 def bad_request(error):
     return make_response(jsonify({'error': 'Bad request'}), 400)

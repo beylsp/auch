@@ -25,4 +25,11 @@ class Store(object):
             return last_update
         return dt(1970, 1, 1)
 
+    def product_files(self, user):
+        pfiles = list()
+        for pid in self.lrange('user:%s:products' % user.id, 0, -1):
+            version = self.hget('products:%s' % pid, 'version')
+            pfiles.append('%s_v%s.json' % (pid, version))
+        return pfiles            
+
 store = Store()

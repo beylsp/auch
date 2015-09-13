@@ -107,3 +107,13 @@ class TestSync(AuchAppTest):
         date = 'Sunday, 06-Nov-14 08:49:37 GMT'
         response = self.get_protected_resource(modified=date)
         self.assertNotAuthorized(response)
+
+    def test_sync_data_with_product_manifest(self):
+        date = 'Sun Nov 6 08:49:37 2014'
+        response = self.get_protected_resource(modified=date)
+        self.assertOk(response)
+
+        json_data = json.loads(response.data)
+        self.assertEqual('auch-json-v1', json_data.get('format'))
+        expected_list = ['s4_v1.json', 's3_v1.json', 's2_v1.json', 's1_v1.json', 's0_v1.json']
+        self.assertEqual(expected_list, json_data.get('product_files'))

@@ -2,6 +2,8 @@ from passlib.apps import custom_app_context as pwd_context
 from auchapp import app
 from auchapp.models.users import db
 from auchapp.models.users import User
+from auchapp.store import store
+from datetime import datetime as dt
 
 import unittest
 import tempfile
@@ -25,6 +27,14 @@ class AuchAppTest(unittest.TestCase):
         user.password = pwd_context.encrypt('doe')
         db.session.add(user)
         db.session.commit()
+
+        # create product store
+        now = dt.now().strftime('%a %b %d %H:%M:%S %Y')
+        store.set('last-update', now)
+        for i in range(5):
+            pid = 's%d' % i
+            store.lpush('user:%s:products' % user.id, pid)
+            store.hset('products:%s' % pid, 'version', 1)
 
         # create a test app every test case can use.
         self.test_app = app.test_client()
