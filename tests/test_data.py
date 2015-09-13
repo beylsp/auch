@@ -115,5 +115,5 @@ class TestSync(AuchAppTest):
 
         json_data = json.loads(response.data)
         self.assertEqual('auch-json-v1', json_data.get('format'))
-        expected_list = ['s4_v1.json', 's3_v1.json', 's2_v1.json', 's1_v1.json', 's0_v1.json']
+        expected_list = [u's4_v1.json', u's3_v1.json', u's2_v1.json', u's1_v1.json', u's0_v1.json']
         self.assertEqual(expected_list, json_data.get('product_files'))
