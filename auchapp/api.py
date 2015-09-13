@@ -71,7 +71,7 @@ def del_user():
 def sync_data(modified_since):
     last_update = store.last_update
     if modified_since == last_update:
-        abort(304)
+        return make_response(jsonify({'result': 'Not modified'}), 304)
     elif modified_since < last_update:
         return make_response(jsonify(
             {'format': 'auch-json-v1',
