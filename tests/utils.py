@@ -40,10 +40,18 @@ class AuchAppTest(unittest.TestCase):
         self.test_app = app.test_client()
 
     def tearDown(self):
+        self.clean_db()
+        self.clean_store()
+
+    def clean_db(self):
         db.session.remove()
         db.drop_all()
         os.close(self.db_fd)
         os.unlink(app.config['DATABASE'])
+
+    def clean_store(self):
+        for key in store.keys():
+            store.delete(key)
 
     def add_user_to_db(self, username, password):
         user = User(username=username)
