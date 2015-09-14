@@ -120,7 +120,7 @@ class TestSync(AuchAppTest):
 
 class TestSyncTarget(TestSync):
 
-    def get_protected_resource(self, resource):
+    def get_protected_resource(self, resource, **kwargs):
         kwargs = {}
         headers = {'Authentication-Token' : self.token}
         kwargs['headers'] = headers
