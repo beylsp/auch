@@ -79,3 +79,13 @@ def sync_data(modified_since):
             200)
     else:
         abort(400)
+
+
+@app.route('/api/sync/<target>_v<version>.json', methods=['GET'])
+@auth.auth_token_required
+def sync_target(target, version):
+    if not store.contains(g.user, target):
+        abort(404)
+    if not store.is_latest(target, version):
+        abort(404)
+    return make_response(jsonify({'result': 'ok'}), 200)

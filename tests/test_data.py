@@ -117,3 +117,49 @@ class TestSync(AuchAppTest):
         self.assertEqual('auch-json-v1', json_data.get('format'))
         expected_list = [u's4_v1.json', u's3_v1.json', u's2_v1.json', u's1_v1.json', u's0_v1.json']
         self.assertEqual(expected_list, json_data.get('product_files'))
+
+class TestSyncTarget(TestSync):
+
+    def get_protected_resource(self, resource):
+        kwargs = {}
+        headers = {'Authentication-Token' : self.token}
+        kwargs['headers'] = headers
+        
+        return self.test_app.open('/api/sync/%s' % resource, method='get', **kwargs)
+
+    def test_sync_target_with_invalid_filename_no_suffix(self):
+        response = self.get_protected_resource('s1_v1')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_invalid_filename_no_version(self):
+        response = self.get_protected_resource('s1.json')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_invalid_filename_invalid_version(self):
+        response = self.get_protected_resource('s1_1.json')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_invalid_filename_no_target(self):
+        response = self.get_protected_resource('_v1.json')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_invalid_filename(self):
+        response = self.get_protected_resource('thisisinvalid')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_valid_filename_but_target_doesnot_exist_for_user(self):
+        response = self.get_protected_resource('s6_v1.json')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_valid_filename_but_version_invalid(self):
+        response = self.get_protected_resource('s1_v99.json')
+        self.assertNotFound(response)
+
+    def test_sync_target_with_valid_filename(self):
+        response = self.get_protected_resource('s1_v1.json')
+        self.assertOk(response)
+
+    def test_sync_target_with_valid_filename_but_no_token(self):
+        self.token = ''
+        response = self.get_protected_resource('s1_v1.json')
+        self.assertNotAuthorized(response)

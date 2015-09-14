@@ -32,4 +32,11 @@ class Store(object):
             pfiles.append('%s_v%s.json' % (pid, version))
         return pfiles            
 
+    def contains(self, user, id):
+        return id in self.lrange('user:%s:products' % user.id, 0, -1)
+
+    def is_latest(self, target, version):
+        return version == store.hget('products:%s' %target, 'version')
+
+
 store = Store()
