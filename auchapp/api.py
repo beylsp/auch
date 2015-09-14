@@ -81,11 +81,11 @@ def sync_data(modified_since):
         abort(400)
 
 
-@app.route('/api/sync/<target>_v<version>.json', methods=['GET'])
+@app.route('/api/sync/<product>_v<version>.json', methods=['GET'])
 @auth.auth_token_required
-def sync_target(target, version):
-    if not store.contains(g.user, target):
+def sync_product(product, version):
+    if not store.contains(g.user, product):
         abort(404)
-    if not store.is_latest(target, version):
+    if not store.is_latest(product, version):
         abort(404)
-    return make_response(jsonify({'result': 'ok'}), 200)
+    return make_response(jsonify({'product': store.get_product(product)}), 200)

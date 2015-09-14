@@ -35,8 +35,10 @@ class Store(object):
     def contains(self, user, id):
         return id in self.lrange('user:%s:products' % user.id, 0, -1)
 
-    def is_latest(self, target, version):
-        return version == store.hget('products:%s' %target, 'version')
+    def is_latest(self, product, version):
+        return version == store.hget('products:%s' %product, 'version')
 
+    def get_product(self, product):
+        return store.hgetall('products:%s' %product)
 
 store = Store()
