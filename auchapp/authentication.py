@@ -7,6 +7,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask import g
 from flask import request
 from auchapp import app
+from auchapp import err
 from auchapp.models.users import User
 
 
@@ -31,7 +32,7 @@ class RestHTTPBasicAuth(HTTPBasicAuth):
         if auth:
             user = User.query.filter_by(username = auth.username).first()
         else:
-            return False        
+            return False
         if user and self._verify_password(auth.password, user):
             g.user = user
             return True                
@@ -53,7 +54,7 @@ class RestHTTPBasicAuth(HTTPBasicAuth):
             if self._check_http_auth():
                 return f(*args, **kwargs)
             else:
-                return self.auth_error_callback()
+                return err.make_error(401, "Requires authentication")
         return decorated
 
     def auth_token_required(self, f):
@@ -62,7 +63,7 @@ class RestHTTPBasicAuth(HTTPBasicAuth):
             if self._check_token():
                 return f(*args, **kwargs)
             else:
-                return self.auth_error_callback()
+                return err.make_error(401, "Requires token authentication")
         return decorated
 
 

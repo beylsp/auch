@@ -2,9 +2,9 @@ from flask import jsonify
 from flask import g
 from flask import make_response
 from flask import request
-from flask import abort
 from flask import url_for
 from auchapp import app
+from auchapp import err
 from auchapp import dateutil
 from auchapp.database import db
 from auchapp.store import store
@@ -29,11 +29,11 @@ def get_test_resource():
 @app.route('/api/users', methods=['POST'])
 def new_user():
     if not request.get_json():
-        abort(400) # no json body
+        return err.make_error(400, "Missing json body")
 
     data, errors = user_schema.load(request.json)
     if errors:
-        abort(400)
+        return err.make_error(400, "Invalid json body")
 
     user = User(username = data.get('username'))
     user.password = data.get('password')
@@ -46,11 +46,11 @@ def new_user():
 @auth.auth_token_required
 def edit_user():
     if not request.get_json():
-        abort(400) # no json body
+        return err.make_error(400, "Missing json body")
 
     data, errors = user_schema.load(request.json)
     if errors:
-        abort(400)
+        return err.make_error(400, "Invalid json body")
 
     User.query.filter_by(username = g.user.username).update(data)
     db.session.commit()
@@ -71,21 +71,21 @@ def del_user():
 def sync_data(modified_since):
     last_update = store.last_update
     if modified_since == last_update:
-        return make_response(jsonify({'result': 'Not modified'}), 304)
+        return err.make_error(304, "Not modified")
     elif modified_since < last_update:
         return make_response(jsonify(
             {'format': 'auch-json-v1',
              'product_files': store.product_files(g.user) }),
             200)
     else:
-        abort(400)
+        return err.make_error(400, "Invalid modified date")
 
 
 @app.route('/api/sync/<product>_v<version>.json', methods=['GET'])
 @auth.auth_token_required
 def sync_product(product, version):
     if not store.contains(g.user, product):
-        abort(404)
+        return err.make_error(404, "Invalid product")
     if not store.is_latest(product, version):
-        abort(404)
+        return err.make_error(404, "Not latest product version")
     return make_response(jsonify({'product': store.get_product(product)}), 200)
