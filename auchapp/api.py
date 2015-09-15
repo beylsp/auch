@@ -89,3 +89,8 @@ def sync_product(product, version):
     if not store.is_latest(product, version):
         return err.make_error(404, "Not latest product version")
     return make_response(jsonify({'product': store.get_product(product)}), 200)
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return err.make_error(404, "Not found")
