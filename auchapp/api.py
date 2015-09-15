@@ -94,3 +94,8 @@ def sync_product(product, version):
 @app.errorhandler(404)
 def not_found(e):
     return err.make_error(404, "Not found")
+
+
+@app.errorhandler(405)
+def not_allowed(e):
+    return err.make_error(405, "Not allowed")
