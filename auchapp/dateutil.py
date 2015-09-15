@@ -1,6 +1,7 @@
 from flask import request
 from flask import make_response
 from functools import wraps
+from auchapp import err
 
 import werkzeug
 
@@ -11,12 +12,6 @@ def _check_http_date():
     return werkzeug.http.parse_date(modified_since)
     
 
-def _http_date_error_callback():
-    res = make_response()
-    res.status_code = 400
-    return res
-
-
 def modified_since_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -24,6 +19,6 @@ def modified_since_required(f):
         if date:
             return f(date, *args, **kwargs)
         else:
-            return _http_date_error_callback()
+            return err.make_error(400, "Missing HTTP header key If-Modified-Since")
     return decorated
 
